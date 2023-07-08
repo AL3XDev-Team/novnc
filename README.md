@@ -1,4 +1,4 @@
-> Fork of: https://github.com/novnc/noVNC
+> Fork of: [https://github.com/novnc/noVNC](https://github.com/novnc/noVNC)
 > 
 > This fork adds automatic syncing to the system's clipboard.
 
