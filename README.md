@@ -1,3 +1,7 @@
+> Fork of: https://github.com/novnc/noVNC
+> 
+> This fork adds automatic syncing to the system's clipboard.
+
 ## noVNC: HTML VNC Client Library and Application
 
 [![Test Status](https://github.com/novnc/noVNC/workflows/Test/badge.svg)](https://github.com/novnc/noVNC/actions?query=workflow%3ATest)
