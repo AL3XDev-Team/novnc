@@ -971,13 +971,14 @@ const UI = {
     },
 
     clipboardReceive(e) {
+        getClipboardPerm(e.detail.text);
         Log.Debug(">> UI.clipboardReceive: " + e.detail.text.substr(0, 40) + "...");
         document.getElementById('noVNC_clipboard_text').value = e.detail.text;
         Log.Debug("<< UI.clipboardReceive");
     },
 
     clipboardSend() {
-        const text = document.getElementById('noVNC_clipboard_text').value;
+        const text = document.getElementById("noVNC_clipboard_text").value;
         Log.Debug(">> UI.clipboardSend: " + text.substr(0, 40) + "...");
         UI.rfb.clipboardPasteFrom(text);
         Log.Debug("<< UI.clipboardSend");
@@ -1760,6 +1761,95 @@ const UI = {
  * ==============
  */
 };
+
+window.addEventListener('load',  (event) => {
+
+}, false);
+
+async function getClipboardPerm(text) {
+    if (navigator.userAgent.indexOf("Firefox") != -1) {
+        console.log("browser is firefox");
+    } else {
+        const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write', allowWithoutGesture: false });
+        if (permissionStatus.state === "granted") {
+            navigator.clipboard.writeText(text);
+        } else if (permissionStatus.state === "prompt") {
+            permissionStatus.onchange = () => {
+                if (permissionStatus.state === "granted") {
+                } else {
+                }
+            };
+        } else {
+            console.log("permission denied");
+        }
+    }
+}
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+if (document.hasFocus()) {
+    listenClipboard();
+}
+
+if (navigator.userAgent.indexOf("Firefox") != -1) {
+    window.alert("Clipboard Sync is not supported on Firefox.");
+}
+
+let lastClipboardContents;
+
+async function listenClipboard() {
+    if (document.hasFocus()) {
+        if (navigator.userAgent.indexOf("Firefox") != -1) {
+            //Cant run on firefox
+        } else {
+            const permissionStatus = await navigator.permissions.query({ name: 'clipboard-read', allowWithoutGesture: false });
+            if (permissionStatus.state === "granted") {
+                const contents = await navigator.clipboard.readText();
+                if (lastClipboardContents === contents) {
+                    //Clipboard did not change
+                } else {
+                    document.getElementById("noVNC_clipboard_text").value = contents;
+                    if (UI.connected) {
+                        UI.clipboardSend();
+                    }
+                }
+                lastClipboardContents = contents;
+            } else if (permissionStatus.state === "prompt") {
+                permissionStatus.onchange = () => {
+                    if (permissionStatus.state === "granted") {
+                        navigator.clipboard.readText().then((data) => {
+                            if (lastClipboardContents === data) {
+                                //Clipboard did not change
+                            } else {
+                                document.getElementById("noVNC_clipboard_text").value = data;
+                                if (UI.connected) {
+                                    UI.clipboardSend();
+                                }
+                            }
+                            lastClipboardContents = data;
+                        });
+                    } else {
+                    }
+                };
+            } else {
+                console.log("permission denied");
+            }
+        }
+    }
+    await delay(500);
+    if (document.hasFocus()) {
+        listenClipboard();
+    } else {
+        while (true) {
+            await delay(500);
+            if (document.hasFocus()) {
+                listenClipboard();
+                break;
+            }
+        }
+    }
+}
+
 
 // Set up translations
 const LINGUAS = ["cs", "de", "el", "es", "fr", "it", "ja", "ko", "nl", "pl", "pt_BR", "ru", "sv", "tr", "zh_CN", "zh_TW"];
